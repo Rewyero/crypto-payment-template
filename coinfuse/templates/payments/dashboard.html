@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - CoinFuse{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+    .crypto-amount {
+        font-family: 'Space Mono', monospace;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-4rem)]">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+            Dashboard
+        </h1>
+        <p class="mt-2 text-gray-400">Monitor your crypto payment activity and analytics</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Volume -->
+        <div class="glassmorphism rounded-2xl p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">Total Volume</p>
+                    <p class="text-2xl font-bold text-gray-300 mt-1 crypto-amount">
+                        ${{ total_volume|default:"0.00" }}
+                    </p>
+                </div>
+                <div class="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-600 flex items-center justify-center">
+                    <i class="fas fa-chart-line text-xl text-white"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center">
+                <span class="text-green-400 text-sm flex items-center">
+                    <i class="fas fa-arrow-up mr-1"></i>
+                    {{ volume_growth|default:"0" }}%
+                </span>
+                <span class="text-gray-400 text-sm ml-2">vs last month</span>
+            </div>
+        </div>
+
+        <!-- Total Transactions -->
+        <div class="glassmorphism rounded-2xl p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">Total Transactions</p>
+                    <p class="text-2xl font-bold text-gray-300 mt-1">
+                        {{ total_transactions|default:"0" }}
+                    </p>
+                </div>
+                <div class="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-600 flex items-center justify-center">
+                    <i class="fas fa-exchange-alt text-xl text-white"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center">
+                <span class="text-green-400 text-sm flex items-center">
+                    <i class="fas fa-arrow-up mr-1"></i>
+                    {{ transaction_growth|default:"0" }}%
+                </span>
+                <span class="text-gray-400 text-sm ml-2">vs last month</span>
+            </div>
+        </div>
+
+        <!-- Active Subscriptions -->
+        <div class="glassmorphism rounded-2xl p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">Active Subscriptions</p>
+                    <p class="text-2xl font-bold text-gray-300 mt-1">
+                        {{ active_subscriptions|default:"0" }}
+                    </p>
+                </div>
+                <div class="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-600 flex items-center justify-center">
+                    <i class="fas fa-sync text-xl text-white"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center">
+                <span class="text-green-400 text-sm flex items-center">
+                    <i class="fas fa-arrow-up mr-1"></i>
+                    {{ subscription_growth|default:"0" }}%
+                </span>
+                <span class="text-gray-400 text-sm ml-2">vs last month</span>
+            </div>
+        </div>
+
+        <!-- Connected Wallets -->
+        <div class="glassmorphism rounded-2xl p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">Connected Wallets</p>
+                    <p class="text-2xl font-bold text-gray-300 mt-1">
+                        {{ connected_wallets|default:"0" }}
+                    </p>
+                </div>
+                <div class="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-600 flex items-center justify-center">
+                    <i class="fas fa-wallet text-xl text-white"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'manage_wallets' %}" class="text-blue-400 hover:text-blue-300 text-sm flex items-center">
+                    <span>Manage Wallets</span>
+                    <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="glassmorphism rounded-2xl overflow-hidden mb-8">
+        <div class="p-6 border-b border-gray-700/30">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold text-gray-300">Recent Transactions</h2>
+                <a href="{% url 'transaction_history' %}" class="text-blue-400 hover:text-blue-300 text-sm flex items-center">
+                    View All
+                    <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-700/30">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700/30">
+                    {% for transaction in recent_transactions %}
+                    <tr class="hover:bg-gray-700/20">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {{ transaction.created_at|date:"M d, Y H:i" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                {% if transaction.crypto_type == 'BTC' %}
+                                <i class="fab fa-bitcoin text-[#F7931A] mr-2"></i>
+                                {% elif transaction.crypto_type == 'ETH' %}
+                                <i class="fab fa-ethereum text-[#627EEA] mr-2"></i>
+                                {% else %}
+                                <i class="fas fa-coins text-gray-400 mr-2"></i>
+                                {% endif %}
+                                <span class="text-gray-300">{{ transaction.crypto_type }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex flex-col">
+                                <span class="text-gray-300 crypto-amount">${{ transaction.amount_usd }}</span>
+                                <span class="text-sm text-gray-400 crypto-amount">{{ transaction.crypto_amount }} {{ transaction.crypto_type }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if transaction.status == 'completed' %}
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-400/10 text-green-400">
+                                <i class="fas fa-check-circle mr-1"></i>Completed
+                            </span>
+                            {% elif transaction.status == 'pending' %}
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-400/10 text-yellow-400">
+                                <i class="fas fa-clock mr-1"></i>Pending
+                            </span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-400/10 text-red-400">
+                                <i class="fas fa-times-circle mr-1"></i>Failed
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{% url 'transaction_detail' transaction.id %}" class="text-blue-400 hover:text-blue-300">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                            <i class="fas fa-receipt text-4xl mb-2"></i>
+                            <p>No transactions yet</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Create Payment -->
+        <div class="glassmorphism rounded-2xl p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-600 flex items-center justify-center mb-4">
+                <i class="fas fa-plus text-xl text-white"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-300 mb-2">Create Payment</h3>
+            <p class="text-gray-400 mb-4">Generate a new payment link or QR code for instant crypto payments.</p>
+            <a href="{% url 'create_payment' %}" class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-blue-400 to-purple-600 hover:from-blue-500 hover:to-purple-700 transition-all duration-300">
+                <i class="fas fa-plus mr-2"></i>
+                New Payment
+            </a>
+        </div>
+
+        <!-- API Keys -->
+        <div class="glassmorphism rounded-2xl p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-600 flex items-center justify-center mb-4">
+                <i class="fas fa-key text-xl text-white"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-300 mb-2">API Keys</h3>
+            <p class="text-gray-400 mb-4">Manage your API keys and access credentials for integration.</p>
+            <a href="{% url 'api_keys' %}" class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-blue-400 to-purple-600 hover:from-blue-500 hover:to-purple-700 transition-all duration-300">
+                <i class="fas fa-key mr-2"></i>
+                Manage Keys
+            </a>
+        </div>
+
+        <!-- Documentation -->
+        <div class="glassmorphism rounded-2xl p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-600 flex items-center justify-center mb-4">
+                <i class="fas fa-book text-xl text-white"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-300 mb-2">Documentation</h3>
+            <p class="text-gray-400 mb-4">Learn how to integrate CoinFuse into your applications.</p>
+            <a href="{% url 'docs:home' %}" class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-blue-400 to-purple-600 hover:from-blue-500 hover:to-purple-700 transition-all duration-300">
+                <i class="fas fa-book mr-2"></i>
+                View Docs
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

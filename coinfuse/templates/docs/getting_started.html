@@ -1,0 +1,108 @@
+{% extends "docs/base_docs.html" %}
+
+{% block title %}Getting Started - CoinFuse Documentation{% endblock %}
+
+{% block doc_content %}
+<div class="space-y-8">
+    <div class="bg-background-dark/50 rounded-xl p-6 border border-white/10">
+        <h1 class="text-3xl font-bold text-text-light mb-4">Getting Started with CoinFuse</h1>
+        <p class="text-text mb-6">Learn how to integrate CoinFuse into your application and start accepting cryptocurrency payments.</p>
+    </div>
+
+    <div class="space-y-6">
+        <section>
+            <h2 class="text-2xl font-semibold text-text-light mb-4">Prerequisites</h2>
+            <ul class="list-disc list-inside space-y-2 text-text">
+                <li>Python 3.8 or higher</li>
+                <li>Django 3.2 or higher</li>
+                <li>A CoinFuse account (sign up at <a href="https://coinfuse.com/signup" class="text-accent-blue hover:underline">coinfuse.com</a>)</li>
+                <li>Basic understanding of Django and web development</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-semibold text-text-light mb-4">Installation</h2>
+            <div class="space-y-4">
+                <p class="text-text">Install the CoinFuse package using pip:</p>
+                <pre class="bg-background-dark/50 p-4 rounded-lg"><code class="language-bash">pip install coinfuse</code></pre>
+
+                <p class="text-text">Add CoinFuse to your Django project's settings:</p>
+                <pre class="bg-background-dark/50 p-4 rounded-lg"><code class="language-python">INSTALLED_APPS = [
+    ...
+    'coinfuse',
+    ...
+]
+
+# CoinFuse Settings
+COINFUSE_API_KEY = 'your-api-key'
+COINFUSE_WEBHOOK_SECRET = 'your-webhook-secret'</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-semibold text-text-light mb-4">Configuration</h2>
+            <div class="space-y-4">
+                <p class="text-text">Configure your API keys in your environment variables:</p>
+                <pre class="bg-background-dark/50 p-4 rounded-lg"><code class="language-bash"># .env file
+COINFUSE_API_KEY=sk_test_...
+COINFUSE_WEBHOOK_SECRET=whsec_...</code></pre>
+
+                <p class="text-text">Add the CoinFuse URLs to your project's URL configuration:</p>
+                <pre class="bg-background-dark/50 p-4 rounded-lg"><code class="language-python"># urls.py
+from django.urls import path, include
+
+urlpatterns = [
+    ...
+    path('payments/', include('coinfuse.urls')),
+    ...
+]</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-semibold text-text-light mb-4">Basic Usage</h2>
+            <div class="space-y-4">
+                <p class="text-text">Create a payment in your view:</p>
+                <pre class="bg-background-dark/50 p-4 rounded-lg"><code class="language-python">from coinfuse.models import Payment
+
+def create_payment(request):
+    payment = Payment.objects.create(
+        amount=100,  # USD
+        currency='USD',
+        description='Test Payment'
+    )
+    return redirect(payment.checkout_url)</code></pre>
+
+                <p class="text-text">Handle webhook events:</p>
+                <pre class="bg-background-dark/50 p-4 rounded-lg"><code class="language-python">from coinfuse.webhooks import handle_webhook
+
+@csrf_exempt
+def webhook(request):
+    payload = request.body
+    sig_header = request.headers.get('CoinFuse-Signature')
+    
+    try:
+        event = handle_webhook(payload, sig_header)
+        # Handle the event
+        return HttpResponse(status=200)
+    except Exception as e:
+        return HttpResponse(status=400)</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-semibold text-text-light mb-4">Next Steps</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="{% url 'docs:api_reference' %}" class="bg-background-dark/50 p-4 rounded-lg border border-white/10 hover:border-accent-blue transition-colors">
+                    <h3 class="text-lg font-semibold text-text-light mb-2">API Reference</h3>
+                    <p class="text-text">Explore the complete API documentation</p>
+                </a>
+                <a href="{% url 'docs:examples' %}" class="bg-background-dark/50 p-4 rounded-lg border border-white/10 hover:border-accent-blue transition-colors">
+                    <h3 class="text-lg font-semibold text-text-light mb-2">Examples</h3>
+                    <p class="text-text">View code examples and integration guides</p>
+                </a>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %} 

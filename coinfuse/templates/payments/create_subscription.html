@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-background-dark to-background-darker py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent-blue to-accent-purple">
+                Create Subscription
+            </h1>
+            <p class="mt-2 text-text">Set up recurring crypto payments for your business</p>
+        </div>
+
+        <!-- Subscription Form -->
+        <div class="glassmorphism rounded-2xl p-8">
+            <form id="subscriptionForm" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Plan Name -->
+                <div>
+                    <label for="plan_name" class="block text-sm font-medium text-text-light">Plan Name</label>
+                    <input type="text" name="plan_name" id="plan_name" required
+                        class="mt-1 block w-full bg-background-dark/50 border border-white/10 rounded-lg shadow-sm py-2 px-3 text-text-light focus:ring-2 focus:ring-accent-blue focus:border-accent-blue">
+                </div>
+
+                <!-- Amount -->
+                <div>
+                    <label for="amount" class="block text-sm font-medium text-text-light">Amount (USD)</label>
+                    <div class="mt-1 relative rounded-lg shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-text">$</span>
+                        </div>
+                        <input type="number" name="amount" id="amount" step="0.01" required
+                            class="block w-full bg-background-dark/50 border border-white/10 rounded-lg pl-7 pr-12 py-2 text-text-light focus:ring-2 focus:ring-accent-blue focus:border-accent-blue">
+                    </div>
+                </div>
+
+                <!-- Crypto Type -->
+                <div class="relative">
+                    <label for="crypto_type" class="block text-sm font-medium text-text-light mb-1">Crypto Currency</label>
+                    <div class="relative">
+                        <button type="button" id="crypto-dropdown-button"
+                            class="relative w-full bg-background-dark/50 border border-white/10 rounded-lg py-2 pl-3 pr-10 text-left text-text-light cursor-pointer hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-accent-blue">
+                            <span class="flex items-center">
+                                <i class="fab fa-bitcoin text-[#F7931A] mr-2"></i>
+                                <span class="crypto-selected-text">Bitcoin (BTC)</span>
+                            </span>
+                            <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-text-dark"></i>
+                            </span>
+                        </button>
+                        
+                        <!-- Hidden Select for Form Submission -->
+                        <input type="hidden" name="crypto_type" id="crypto_type" value="BTC">
+                        
+                        <!-- Custom Dropdown Menu -->
+                        <div id="crypto-dropdown-menu" 
+                            class="hidden absolute z-50 w-full mt-1 bg-background-dark/95 backdrop-blur-xl rounded-lg shadow-lg max-h-60 overflow-auto border border-white/10">
+                            <div class="py-1">
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-text-light hover:bg-white/10 transition-colors" data-value="BTC">
+                                    <i class="fab fa-bitcoin text-[#F7931A] mr-2"></i>
+                                    Bitcoin (BTC)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-text-light hover:bg-white/10 transition-colors" data-value="ETH">
+                                    <i class="fab fa-ethereum text-[#627EEA] mr-2"></i>
+                                    Ethereum (ETH)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-text-light hover:bg-white/10 transition-colors" data-value="SOL">
+                                    <i class="fas fa-circle text-[#14F195] mr-2"></i>
+                                    Solana (SOL)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-text-light hover:bg-white/10 transition-colors" data-value="BNB">
+                                    <i class="fas fa-coins text-[#F3BA2F] mr-2"></i>
+                                    Binance Coin (BNB)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-text-light hover:bg-white/10 transition-colors" data-value="XRP">
+                                    <i class="fas fa-circle text-[#23292F] mr-2"></i>
+                                    XRP
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-text-light hover:bg-white/10 transition-colors" data-value="USDT">
+                                    <i class="fas fa-dollar-sign text-[#26A17B] mr-2"></i>
+                                    Tether (USDT)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-text-light hover:bg-white/10 transition-colors" data-value="USDC">
+                                    <i class="fas fa-dollar-sign text-[#2775CA] mr-2"></i>
+                                    USD Coin (USDC)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-text-light hover:bg-white/10 transition-colors" data-value="ADA">
+                                    <i class="fas fa-circle text-[#0033AD] mr-2"></i>
+                                    Cardano (ADA)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-text-light hover:bg-white/10 transition-colors" data-value="DOGE">
+                                    <i class="fas fa-dog text-[#C2A633] mr-2"></i>
+                                    Dogecoin (DOGE)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-text-light hover:bg-white/10 transition-colors" data-value="AVAX">
+                                    <i class="fas fa-circle text-[#E84142] mr-2"></i>
+                                    Avalanche (AVAX)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interval -->
+                <div>
+                    <label for="interval" class="block text-sm font-medium text-text-light">Billing Interval</label>
+                    <select name="interval" id="interval" required
+                        class="mt-1 block w-full bg-background-dark/50 border border-white/10 rounded-lg shadow-sm py-2 px-3 text-text-light focus:ring-2 focus:ring-accent-blue focus:border-accent-blue">
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+
+                <!-- Live Preview -->
+                <div class="bg-background-dark/50 rounded-lg p-4 mt-6">
+                    <h3 class="text-sm font-medium text-text-light mb-2">Live Preview</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-text">Amount in USD:</p>
+                            <p class="text-text-light" id="previewUSD">$0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-text">Estimated in <span id="previewCryptoType">BTC</span>:</p>
+                            <p class="text-text-light" id="previewCrypto">0.00000000</p>
+                        </div>
+                        <div>
+                            <p class="text-text">Billing Interval:</p>
+                            <p class="text-text-light" id="previewInterval">Monthly</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end mt-6">
+                    <a href="{% url 'dashboard' %}" class="mr-4 inline-flex items-center px-4 py-2 border border-white/10 rounded-lg text-sm font-medium text-text-light hover:bg-white/10">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Dashboard
+                    </a>
+                    <button type="submit"
+                        class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue/90 hover:to-accent-purple/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-blue">
+                        <i class="fas fa-plus mr-2"></i>
+                        Create Subscription
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('subscriptionForm');
+    const amountInput = document.getElementById('amount');
+    const cryptoTypeInput = document.getElementById('crypto_type');
+    const intervalSelect = document.getElementById('interval');
+    const cryptoDropdownButton = document.getElementById('crypto-dropdown-button');
+    const cryptoDropdownMenu = document.getElementById('crypto-dropdown-menu');
+    const cryptoSelectedText = document.querySelector('.crypto-selected-text');
+    
+    // Preview elements
+    const previewUSD = document.getElementById('previewUSD');
+    const previewCrypto = document.getElementById('previewCrypto');
+    const previewCryptoType = document.getElementById('previewCryptoType');
+    const previewInterval = document.getElementById('previewInterval');
+
+    let isDropdownOpen = false;
+
+    // Toggle dropdown
+    cryptoDropdownButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        isDropdownOpen = !isDropdownOpen;
+        
+        if (isDropdownOpen) {
+            cryptoDropdownMenu.classList.remove('hidden');
+            cryptoDropdownButton.classList.add('ring-2', 'ring-accent-blue');
+        } else {
+            cryptoDropdownMenu.classList.add('hidden');
+            cryptoDropdownButton.classList.remove('ring-2', 'ring-accent-blue');
+        }
+    });
+
+    // Close dropdown when clicking outside
+    window.addEventListener('click', function(e) {
+        if (!cryptoDropdownButton.contains(e.target) && !cryptoDropdownMenu.contains(e.target)) {
+            isDropdownOpen = false;
+            cryptoDropdownMenu.classList.add('hidden');
+            cryptoDropdownButton.classList.remove('ring-2', 'ring-accent-blue');
+        }
+    });
+
+    // Handle crypto option selection
+    const cryptoOptions = document.querySelectorAll('.crypto-option');
+    cryptoOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const value = this.getAttribute('data-value');
+            const text = this.textContent.trim();
+            const icon = this.querySelector('i').cloneNode(true);
+            
+            // Update button appearance
+            cryptoSelectedText.textContent = text;
+            cryptoDropdownButton.querySelector('i').replaceWith(icon);
+            
+            // Update hidden input
+            cryptoTypeInput.value = value;
+            
+            // Close dropdown
+            isDropdownOpen = false;
+            cryptoDropdownMenu.classList.add('hidden');
+            cryptoDropdownButton.classList.remove('ring-2', 'ring-accent-blue');
+            
+            // Update preview
+            updatePreview();
+        });
+    });
+
+    // Update preview on input changes
+    const updatePreview = async () => {
+        const amount = parseFloat(amountInput.value) || 0;
+        const cryptoType = cryptoTypeInput.value;
+        const interval = intervalSelect.value;
+        
+        previewUSD.textContent = `$${amount.toFixed(2)}`;
+        previewCryptoType.textContent = cryptoType;
+        previewInterval.textContent = interval.charAt(0).toUpperCase() + interval.slice(1);
+        
+        try {
+            const response = await fetch(`/payments/api/crypto-price/${cryptoType}/`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            const cryptoAmount = amount / data.price;
+            previewCrypto.textContent = cryptoAmount.toFixed(8);
+        } catch (error) {
+            console.error('Error fetching crypto price:', error);
+            previewCrypto.textContent = 'Error';
+        }
+    };
+    
+    // Handle form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        try {
+            const formData = new FormData(form);
+            const response = await fetch('/payments/create-subscription/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                window.location.href = data.redirect_url;
+            } else {
+                alert(data.error || 'An error occurred while creating the subscription.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while creating the subscription.');
+        }
+    });
+    
+    amountInput.addEventListener('input', updatePreview);
+    intervalSelect.addEventListener('change', updatePreview);
+    
+    // Initial preview update
+    updatePreview();
+});
+</script>
+{% endblock %}
+{% endblock %} 

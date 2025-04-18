@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+    .crypto-amount {
+        font-family: 'Space Mono', monospace;
+    }
+    .crypto-preview {
+        font-family: 'Space Mono', monospace;
+        color: #A3BFFA;
+        font-size: 0.875rem;
+    }
+    .crypto-icon {
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    .wallet-address {
+        font-family: 'Space Mono', monospace;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-[#1E2A44] to-[#2A3656] py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+                Create Payment
+            </h1>
+            <p class="mt-2 text-gray-400">Accept one-time crypto payments for your business</p>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="bg-[#2E3A59]/30 backdrop-blur-xl rounded-2xl shadow-xl p-8">
+            <form id="paymentForm" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Amount -->
+                <div>
+                    <label for="amount" class="block text-sm font-medium text-gray-300">Amount (USD)</label>
+                    <div class="mt-1 relative rounded-lg shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-400 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" name="amount" id="amount" step="0.01" required
+                            class="block w-full bg-[#1E293B] border border-gray-600 rounded-lg pl-7 pr-12 py-2 text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Crypto Type -->
+                <div class="relative">
+                    <label for="crypto_type" class="block text-sm font-medium text-gray-300">Crypto Currency</label>
+                    <div class="mt-1">
+                        <button type="button" id="crypto-dropdown-button"
+                            class="relative w-full bg-[#1E293B] border border-gray-600 rounded-lg py-2 pl-3 pr-10 text-left text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <span class="flex items-center">
+                                <i class="fab fa-bitcoin text-[#F7931A] mr-2"></i>
+                                <span class="crypto-selected-text">Bitcoin (BTC)</span>
+                            </span>
+                            <span class="absolute inset-y-0 right-0 flex items-center pr-2">
+                                <i class="fas fa-chevron-down text-gray-400"></i>
+                            </span>
+                        </button>
+                        <select name="crypto_type" id="crypto_type" class="hidden">
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="ETH">Ethereum (ETH)</option>
+                            <option value="SOL">Solana (SOL)</option>
+                            <option value="BNB">Binance Coin (BNB)</option>
+                            <option value="XRP">XRP</option>
+                            <option value="USDT">Tether (USDT)</option>
+                            <option value="USDC">USD Coin (USDC)</option>
+                            <option value="ADA">Cardano (ADA)</option>
+                            <option value="DOGE">Dogecoin (DOGE)</option>
+                            <option value="AVAX">Avalanche (AVAX)</option>
+                        </select>
+                        <!-- Custom Dropdown Menu -->
+                        <div id="crypto-dropdown-menu" 
+                            class="hidden absolute z-10 mt-1 w-full bg-[#1E293B] rounded-lg shadow-lg max-h-60 overflow-auto border border-gray-600">
+                            <div class="py-1">
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-gray-300 hover:bg-blue-600 hover:text-white" data-value="BTC">
+                                    <i class="fab fa-bitcoin text-[#F7931A] mr-2"></i>
+                                    Bitcoin (BTC)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-gray-300 hover:bg-blue-600 hover:text-white" data-value="ETH">
+                                    <i class="fab fa-ethereum text-[#627EEA] mr-2"></i>
+                                    Ethereum (ETH)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-gray-300 hover:bg-blue-600 hover:text-white" data-value="SOL">
+                                    <i class="fas fa-circle text-[#14F195] mr-2"></i>
+                                    Solana (SOL)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-gray-300 hover:bg-blue-600 hover:text-white" data-value="BNB">
+                                    <i class="fas fa-coins text-[#F3BA2F] mr-2"></i>
+                                    Binance Coin (BNB)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-gray-300 hover:bg-blue-600 hover:text-white" data-value="XRP">
+                                    <i class="fas fa-circle text-[#23292F] mr-2"></i>
+                                    XRP
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-gray-300 hover:bg-blue-600 hover:text-white" data-value="USDT">
+                                    <i class="fas fa-dollar-sign text-[#26A17B] mr-2"></i>
+                                    Tether (USDT)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-gray-300 hover:bg-blue-600 hover:text-white" data-value="USDC">
+                                    <i class="fas fa-dollar-sign text-[#2775CA] mr-2"></i>
+                                    USD Coin (USDC)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-gray-300 hover:bg-blue-600 hover:text-white" data-value="ADA">
+                                    <i class="fas fa-circle text-[#0033AD] mr-2"></i>
+                                    Cardano (ADA)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-gray-300 hover:bg-blue-600 hover:text-white" data-value="DOGE">
+                                    <i class="fas fa-dog text-[#C2A633] mr-2"></i>
+                                    Dogecoin (DOGE)
+                                </div>
+                                <div class="crypto-option cursor-pointer flex items-center px-4 py-2 text-gray-300 hover:bg-blue-600 hover:text-white" data-value="AVAX">
+                                    <i class="fas fa-circle text-[#E84142] mr-2"></i>
+                                    Avalanche (AVAX)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wallet Selection -->
+                <div>
+                    <label for="wallet_id" class="block text-sm font-medium text-gray-300">
+                        Receiving Wallet
+                        <a href="{% url 'manage_wallets' %}" class="ml-2 text-blue-400 hover:text-blue-300">
+                            <i class="fas fa-plus-circle"></i>
+                            Add New
+                        </a>
+                    </label>
+                    <select name="wallet_id" id="wallet_id" required
+                        class="mt-1 block w-full bg-[#1E293B] border border-gray-600 rounded-lg shadow-sm py-2 px-3 text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select a wallet</option>
+                        {% for wallet in wallets %}
+                        <option value="{{ wallet.id }}" data-network="{{ wallet.network }}" data-crypto="{{ wallet.crypto_type }}">
+                            {{ wallet.crypto_type }} - {{ wallet.wallet_source }} ({{ wallet.network }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Network Warning -->
+                <div id="networkWarning" class="hidden bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-300" id="networkWarningText"></p>
+                            <p class="mt-2">
+                                <a href="{% url 'manage_wallets' %}" class="text-yellow-400 hover:text-yellow-300 font-medium">
+                                    Update wallet settings
+                                    <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Preview -->
+                <div class="bg-[#1E293B]/50 rounded-lg p-4 mt-6">
+                    <h3 class="text-sm font-medium text-gray-300 mb-2">Live Preview</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-400">Amount in USD:</p>
+                            <p class="text-gray-200" id="previewUSD">$0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400">Estimated in <span id="previewCryptoType">BTC</span>:</p>
+                            <p class="text-gray-200" id="previewCrypto">0.00000000</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400">Network:</p>
+                            <p class="text-gray-200" id="previewNetwork">-</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400">Receiving Wallet:</p>
+                            <p class="text-gray-200 wallet-address text-xs truncate" id="previewWallet">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end mt-6">
+                    <a href="{% url 'dashboard' %}" class="mr-4 inline-flex items-center px-4 py-2 border border-gray-600 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Dashboard
+                    </a>
+                    <button type="submit"
+                        class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-plus mr-2"></i>
+                        Create Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('paymentForm');
+    const amountInput = document.getElementById('amount');
+    const cryptoTypeSelect = document.getElementById('crypto_type');
+    const walletSelect = document.getElementById('wallet_id');
+    const cryptoDropdownButton = document.getElementById('crypto-dropdown-button');
+    const cryptoDropdownMenu = document.getElementById('crypto-dropdown-menu');
+    const cryptoSelectedText = document.querySelector('.crypto-selected-text');
+    const networkWarning = document.getElementById('networkWarning');
+    const networkWarningText = document.getElementById('networkWarningText');
+    
+    // Preview elements
+    const previewUSD = document.getElementById('previewUSD');
+    const previewCrypto = document.getElementById('previewCrypto');
+    const previewCryptoType = document.getElementById('previewCryptoType');
+    const previewNetwork = document.getElementById('previewNetwork');
+    const previewWallet = document.getElementById('previewWallet');
+
+    // Toggle dropdown
+    cryptoDropdownButton.addEventListener('click', () => {
+        cryptoDropdownMenu.classList.toggle('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!cryptoDropdownButton.contains(e.target) && !cryptoDropdownMenu.contains(e.target)) {
+            cryptoDropdownMenu.classList.add('hidden');
+        }
+    });
+
+    // Handle option selection
+    document.querySelectorAll('.crypto-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+            const text = option.textContent.trim();
+            cryptoSelectedText.textContent = text;
+            cryptoTypeSelect.value = value;
+            cryptoDropdownMenu.classList.add('hidden');
+            
+            // Update wallet options based on selected crypto
+            updateWalletOptions(value);
+            
+            // Trigger change event for preview update
+            cryptoTypeSelect.dispatchEvent(new Event('change'));
+        });
+    });
+
+    // Update wallet options based on selected crypto
+    function updateWalletOptions(selectedCrypto) {
+        const options = Array.from(walletSelect.options);
+        options.forEach(option => {
+            if (option.value === '') return; // Skip placeholder option
+            
+            const walletCrypto = option.getAttribute('data-crypto');
+            option.style.display = walletCrypto === selectedCrypto ? '' : 'none';
+        });
+
+        // Reset wallet selection if current selection is incompatible
+        const currentOption = walletSelect.selectedOptions[0];
+        if (currentOption && currentOption.value !== '' && currentOption.getAttribute('data-crypto') !== selectedCrypto) {
+            walletSelect.value = '';
+        }
+
+        checkNetworkCompatibility();
+    }
+
+    // Check network compatibility
+    function checkNetworkCompatibility() {
+        const selectedWallet = walletSelect.selectedOptions[0];
+        if (!selectedWallet || selectedWallet.value === '') {
+            networkWarning.classList.add('hidden');
+            return;
+        }
+
+        const walletCrypto = selectedWallet.getAttribute('data-crypto');
+        const walletNetwork = selectedWallet.getAttribute('data-network');
+        const selectedCrypto = cryptoTypeSelect.value;
+
+        if (walletCrypto !== selectedCrypto) {
+            networkWarningText.textContent = `Selected wallet network (${walletNetwork}) is incompatible with ${selectedCrypto}. Please select a compatible wallet.`;
+            networkWarning.classList.remove('hidden');
+        } else {
+            networkWarning.classList.add('hidden');
+        }
+    }
+    
+    // Update preview on input changes
+    const updatePreview = async () => {
+        const amount = parseFloat(amountInput.value) || 0;
+        const cryptoType = cryptoTypeSelect.value;
+        const selectedWallet = walletSelect.selectedOptions[0];
+        
+        previewUSD.textContent = `$${amount.toFixed(2)}`;
+        previewCryptoType.textContent = cryptoType;
+        
+        if (selectedWallet && selectedWallet.value !== '') {
+            previewNetwork.textContent = selectedWallet.getAttribute('data-network');
+            previewWallet.textContent = selectedWallet.text;
+        } else {
+            previewNetwork.textContent = '-';
+            previewWallet.textContent = '-';
+        }
+        
+        try {
+            const response = await fetch(`/api/crypto-price/${cryptoType}/`);
+            const data = await response.json();
+            const cryptoAmount = amount / data.price;
+            previewCrypto.textContent = cryptoAmount.toFixed(8);
+        } catch (error) {
+            previewCrypto.textContent = 'Error';
+        }
+    };
+    
+    amountInput.addEventListener('input', updatePreview);
+    cryptoTypeSelect.addEventListener('change', updatePreview);
+    walletSelect.addEventListener('change', () => {
+        checkNetworkCompatibility();
+        updatePreview();
+    });
+    
+    // Handle form submission
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Check network compatibility before submitting
+        const selectedWallet = walletSelect.selectedOptions[0];
+        if (selectedWallet && selectedWallet.value !== '') {
+            const walletCrypto = selectedWallet.getAttribute('data-crypto');
+            const selectedCrypto = cryptoTypeSelect.value;
+            
+            if (walletCrypto !== selectedCrypto) {
+                alert('Please select a compatible wallet for the chosen cryptocurrency.');
+                return;
+            }
+        }
+        
+        try {
+            const response = await fetch('/payments/create-payment/', {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                window.location.href = data.redirect_url;
+            } else {
+                alert(data.error || 'An error occurred. Please try again.');
+            }
+        } catch (error) {
+            alert('An error occurred. Please try again.');
+        }
+    });
+    
+    // Initial setup
+    updateWalletOptions(cryptoTypeSelect.value);
+    updatePreview();
+});
+</script>
+{% endblock %}
+{% endblock %} 

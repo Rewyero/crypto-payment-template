@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Support - CoinFuse{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+            <i class="fas fa-headset mr-3"></i>Support Center
+        </h1>
+        <p class="text-gray-400 text-lg">Get help with your CoinFuse integration</p>
+    </div>
+
+    <!-- Contact Methods -->
+    <div class="grid md:grid-cols-2 gap-6 mb-12">
+        <!-- Email Support -->
+        <div class="glassmorphism p-6 rounded-2xl transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                    <i class="fas fa-envelope text-white text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-xl font-semibold text-gray-300">Email Support</h3>
+                    <p class="text-gray-400">Response within 24 hours</p>
+                </div>
+            </div>
+            <a href="mailto:support@coinfuse.com" class="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors">
+                <span>support@coinfuse.com</span>
+                <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+
+        <!-- Documentation -->
+        <div class="glassmorphism p-6 rounded-2xl transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                    <i class="fas fa-book text-white text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-xl font-semibold text-gray-300">Documentation</h3>
+                    <p class="text-gray-400">Detailed guides and API docs</p>
+                </div>
+            </div>
+            <a href="{% url 'docs:home' %}" class="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors">
+                <span>View Documentation</span>
+                <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- FAQs -->
+    <div class="glassmorphism rounded-2xl p-8">
+        <h2 class="text-2xl font-bold mb-6 text-gray-300">
+            <i class="fas fa-question-circle mr-2"></i>Frequently Asked Questions
+        </h2>
+        
+        <div class="space-y-6">
+            <!-- FAQ Item -->
+            <div class="border-b border-gray-700/30 pb-6">
+                <h3 class="text-lg font-semibold text-gray-300 mb-2">How do I integrate CoinFuse with my website?</h3>
+                <p class="text-gray-400">Our integration process is simple. Start by creating an API key in your dashboard, then follow our <a href="{% url 'docs:getting_started' %}" class="text-blue-400 hover:text-blue-300">getting started guide</a> for step-by-step instructions.</p>
+            </div>
+
+            <!-- FAQ Item -->
+            <div class="border-b border-gray-700/30 pb-6">
+                <h3 class="text-lg font-semibold text-gray-300 mb-2">Which cryptocurrencies do you support?</h3>
+                <p class="text-gray-400">We currently support Bitcoin (BTC), Ethereum (ETH), and other major cryptocurrencies. Check our <a href="{% url 'docs:api_reference' %}" class="text-blue-400 hover:text-blue-300">API documentation</a> for the full list.</p>
+            </div>
+
+            <!-- FAQ Item -->
+            <div class="border-b border-gray-700/30 pb-6">
+                <h3 class="text-lg font-semibold text-gray-300 mb-2">How do refunds work?</h3>
+                <p class="text-gray-400">Due to the nature of blockchain transactions, refunds must be processed manually. Contact our support team with your transaction ID for assistance.</p>
+            </div>
+
+            <!-- FAQ Item -->
+            <div class="pb-6">
+                <h3 class="text-lg font-semibold text-gray-300 mb-2">Is there a fee for using CoinFuse?</h3>
+                <p class="text-gray-400">We charge a small percentage fee on successful transactions. View our <a href="#" class="text-blue-400 hover:text-blue-300">pricing page</a> for detailed information about our fee structure.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Still Need Help -->
+    <div class="mt-12 text-center">
+        <h2 class="text-2xl font-bold text-gray-300 mb-4">Still Need Help?</h2>
+        <p class="text-gray-400 mb-6">Our support team is available 24/7 to assist you with any questions or concerns.</p>
+        <a href="mailto:support@coinfuse.com" class="inline-flex items-center px-6 py-3 rounded-lg text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg">
+            <i class="fas fa-paper-plane mr-2"></i>
+            Contact Support
+        </a>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - CryptoStripe{% endblock %}
+
+{% block content %}
+<style>
+    /* Chrome, Safari autofill background and text color fix */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px #1E2A44 inset !important;
+        -webkit-text-fill-color: #DDE4FF !important;
+        caret-color: #DDE4FF !important;
+    }
+
+    /* Firefox autofill color fix */
+    input:autofill {
+        background-color: #1E2A44 !important;
+        color: #DDE4FF !important;
+        box-shadow: 0 0 0 30px #1E2A44 inset !important;
+    }
+
+    /* Edge autofill color fix */
+    input:-internal-autofill-selected {
+        background-color: #1E2A44 !important;
+        color: #DDE4FF !important;
+    }
+</style>
+
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <!-- Card Container -->
+        <div class="bg-[#2E3A59] bg-opacity-50 backdrop-blur-md p-8 rounded-xl shadow-lg">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#4A90E2] to-[#7FB3FF]">
+                    Welcome Back
+                </h2>
+                <p class="mt-2 text-[#A3BFFA]">Sign in to your account</p>
+            </div>
+
+            <!-- Login Form -->
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Username Field -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-[#DDE4FF] mb-2">Username</label>
+                    <input type="text" name="username" id="username" required autocomplete="username"
+                           class="w-full px-4 py-2 rounded-lg bg-[#1E2A44] border border-[#3B486B] text-[#DDE4FF] placeholder-[#A3BFFA] focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent">
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-[#DDE4FF] mb-2">Password</label>
+                    <input type="password" name="password" id="password" required autocomplete="current-password"
+                           class="w-full px-4 py-2 rounded-lg bg-[#1E2A44] border border-[#3B486B] text-[#DDE4FF] placeholder-[#A3BFFA] focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent">
+                </div>
+
+                {% if form.errors %}
+                    <div class="bg-[#FF5555] bg-opacity-20 text-[#FF5555] p-4 rounded-lg">
+                        <p class="text-sm">Your username and password didn't match. Please try again.</p>
+                    </div>
+                {% endif %}
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-[#4A90E2] to-[#7FB3FF] text-white font-semibold py-3 px-4 rounded-lg hover:from-[#5AA0F2] hover:to-[#8FC3FF] transition-all duration-300">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                </button>
+            </form>
+
+            <!-- Registration and Password Reset Links -->
+            <div class="mt-6 space-y-2 text-center">
+                <p class="text-[#A3BFFA]">
+                    Don't have an account?
+                    <a href="{% url 'register' %}" class="text-[#4A90E2] hover:text-[#7FB3FF] font-medium transition-colors">
+                        Create one
+                    </a>
+                </p>
+                <p>
+                    <a href="{% url 'password_reset' %}" class="text-[#4A90E2] hover:text-[#7FB3FF] text-sm font-medium transition-colors">
+                        Forgot your password?
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

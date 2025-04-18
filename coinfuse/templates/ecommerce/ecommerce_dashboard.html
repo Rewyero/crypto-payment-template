@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}E-commerce Dashboard - CoinFuse{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+    .crypto-amount {
+        font-family: 'Space Mono', monospace;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-4rem)]">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+            E-commerce Dashboard
+        </h1>
+        <p class="mt-2 text-gray-400">Monitor your store's performance and crypto payments</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Orders -->
+        <div class="glassmorphism rounded-2xl p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">Total Orders</p>
+                    <p class="text-2xl font-bold text-gray-300 mt-1">{{ total_orders }}</p>
+                </div>
+                <div class="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-600 flex items-center justify-center">
+                    <i class="fas fa-shopping-cart text-xl text-white"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center">
+                <span class="{% if order_growth >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                    <i class="fas {% if order_growth >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1"></i>{{ order_growth|floatformat:1 }}%
+                </span>
+                <span class="text-gray-400 ml-2">vs last month</span>
+            </div>
+        </div>
+
+        <!-- Total Revenue -->
+        <div class="glassmorphism rounded-2xl p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">Total Revenue</p>
+                    <p class="text-2xl font-bold text-gray-300 mt-1 crypto-amount">${{ total_revenue|floatformat:2 }}</p>
+                </div>
+                <div class="h-12 w-12 rounded-lg bg-gradient-to-r from-green-400 to-emerald-600 flex items-center justify-center">
+                    <i class="fas fa-dollar-sign text-xl text-white"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center">
+                <span class="{% if revenue_growth >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                    <i class="fas {% if revenue_growth >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1"></i>{{ revenue_growth|default:0|floatformat:1 }}%
+                </span>
+                <span class="text-gray-400 ml-2">vs last month</span>
+            </div>
+        </div>
+
+        <!-- Crypto Payments -->
+        <div class="glassmorphism rounded-2xl p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">Crypto Payments</p>
+                    <p class="text-2xl font-bold text-gray-300 mt-1">{{ crypto_payments }}</p>
+                </div>
+                <div class="h-12 w-12 rounded-lg bg-gradient-to-r from-purple-400 to-pink-600 flex items-center justify-center">
+                    <i class="fas fa-coins text-xl text-white"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center">
+                <span class="{% if crypto_growth >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                    <i class="fas {% if crypto_growth >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1"></i>{{ crypto_growth|floatformat:1 }}%
+                </span>
+                <span class="text-gray-400 ml-2">vs last month</span>
+            </div>
+        </div>
+
+        <!-- Active Subscriptions -->
+        <div class="glassmorphism rounded-2xl p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">Active Subscriptions</p>
+                    <p class="text-2xl font-bold text-gray-300 mt-1">{{ active_subscriptions }}</p>
+                </div>
+                <div class="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-400 to-cyan-600 flex items-center justify-center">
+                    <i class="fas fa-sync text-xl text-white"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center">
+                <span class="{% if subscription_growth >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                    <i class="fas {% if subscription_growth >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1"></i>{{ subscription_growth|floatformat:1 }}%
+                </span>
+                <span class="text-gray-400 ml-2">vs last month</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Transaction Volume Chart -->
+        <div class="glassmorphism rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-300">Transaction Volume</h3>
+                <select id="timeRange" class="bg-gray-800/50 text-gray-300 border border-gray-700/30 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <option value="7">Last 7 days</option>
+                    <option value="30" selected>Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                </select>
+            </div>
+            <div class="h-64">
+                <canvas id="transactionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Crypto Distribution Chart -->
+        <div class="glassmorphism rounded-2xl p-6">
+            <h3 class="text-lg font-semibold text-gray-300 mb-4">Crypto Distribution</h3>
+            <div class="h-64">
+                <canvas id="cryptoDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="flex flex-wrap gap-4 mb-6">
+        <input type="text" id="dateRange" placeholder="Date range" class="bg-gray-800/50 text-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none border border-gray-700/30">
+        <select id="productFilter" class="bg-gray-800/50 text-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none border border-gray-700/30">
+            <option value="">All Products</option>
+            {% for product in products %}
+            <option value="{{ product.id }}">{{ product.name }}</option>
+            {% endfor %}
+        </select>
+        <select id="statusFilter" class="bg-gray-800/50 text-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none border border-gray-700/30">
+            <option value="">All Statuses</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
+        </select>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="glassmorphism rounded-2xl overflow-hidden">
+        <div class="p-6 border-b border-gray-700/30">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-300">Recent Orders</h3>
+                <a href="#" class="text-blue-400 hover:text-blue-300 text-sm flex items-center">
+                    View All
+                    <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-gray-700/30">
+                        <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-3">Order ID</th>
+                        <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-3">Customer</th>
+                        <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-3">Product</th>
+                        <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-3">Amount</th>
+                        <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-3">Payment Method</th>
+                        <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-3">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700/30">
+                    {% for order in recent_orders %}
+                    <tr class="hover:bg-gray-700/20">
+                        <td class="px-6 py-4 text-gray-300 font-mono">#{{ order.id }}</td>
+                        <td class="px-6 py-4 text-gray-300">{{ order.customer_name }}</td>
+                        <td class="px-6 py-4 text-gray-300">{{ order.product_name }}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="text-gray-300 crypto-amount">${{ order.amount|floatformat:2 }}</span>
+                                {% if order.crypto_amount %}
+                                <span class="text-sm text-gray-400 crypto-amount">{{ order.crypto_amount }} {{ order.payment_method }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                {% if order.payment_method == 'BTC' %}
+                                <i class="fab fa-bitcoin text-[#F7931A] mr-2"></i>
+                                {% elif order.payment_method == 'ETH' %}
+                                <i class="fab fa-ethereum text-[#627EEA] mr-2"></i>
+                                {% else %}
+                                <i class="fas fa-coins text-blue-400 mr-2"></i>
+                                {% endif %}
+                                <span class="text-gray-300">{{ order.payment_method }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                {% if order.status == 'completed' %}bg-green-400/10 text-green-400
+                                {% elif order.status == 'pending' %}bg-yellow-400/10 text-yellow-400
+                                {% else %}bg-red-400/10 text-red-400{% endif %}">
+                                <i class="fas {% if order.status == 'completed' %}fa-check-circle{% elif order.status == 'pending' %}fa-clock{% else %}fa-times-circle{% endif %} mr-1"></i>
+                                {{ order.status|title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center">
+                            <i class="fas fa-shopping-cart text-4xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-400">No orders yet</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize chart data from Django context
+    const chartData = {
+        revenue: {
+            labels: JSON.parse('{{ revenue_labels|safe|escapejs }}'),
+            data: JSON.parse('{{ revenue_data|safe|escapejs }}')
+        },
+        crypto: {
+            labels: JSON.parse('{{ payment_methods_labels|safe|escapejs }}'),
+            data: JSON.parse('{{ payment_methods_data|safe|escapejs }}')
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Transaction Volume Chart
+        const transactionCtx = document.getElementById('transactionChart').getContext('2d');
+        const transactionChart = new Chart(transactionCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.revenue.labels,
+                datasets: [{
+                    label: 'Transaction Volume',
+                    data: chartData.revenue.data,
+                    borderColor: '#60A5FA',
+                    backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#60A5FA',
+                    pointBorderColor: '#FFFFFF',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                        titleColor: '#E5E7EB',
+                        bodyColor: '#E5E7EB',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `$${context.parsed.y.toFixed(2)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#9CA3AF'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#9CA3AF',
+                            callback: function(value) {
+                                return '$' + value.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Crypto Distribution Chart
+        const cryptoCtx = document.getElementById('cryptoDistributionChart').getContext('2d');
+        const cryptoChart = new Chart(cryptoCtx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.crypto.labels,
+                datasets: [{
+                    data: chartData.crypto.data,
+                    backgroundColor: [
+                        '#F7931A', // BTC
+                        '#627EEA', // ETH
+                        '#00FFA3', // SOL
+                        '#F0B90B', // BNB
+                        '#23292F', // XRP
+                        '#26A17B', // USDT
+                        '#2775CA', // USDC
+                        '#0033AD', // ADA
+                        '#BA9F33', // DOGE
+                        '#E84142'  // AVAX
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: '#9CA3AF',
+                            font: {
+                                family: "'Inter', sans-serif"
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            padding: 15,
+                            boxWidth: 8,
+                            boxHeight: 8
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                        titleColor: '#E5E7EB',
+                        bodyColor: '#E5E7EB',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${context.label}: ${percentage}%`;
+                            }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // Handle time range changes
+        document.getElementById('timeRange').addEventListener('change', function(e) {
+            const days = parseInt(e.target.value);
+            fetch(`/api/transactions/volume?days=${days}`)
+                .then(response => response.json())
+                .then(data => {
+                    transactionChart.data.labels = data.labels;
+                    transactionChart.data.datasets[0].data = data.values;
+                    transactionChart.update('none');
+                })
+                .catch(error => console.error('Error fetching transaction data:', error));
+        });
+    });
+</script>
+{% endblock %} 

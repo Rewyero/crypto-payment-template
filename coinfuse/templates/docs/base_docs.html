@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% block doc_title %}Documentation{% endblock %} - CoinFuse{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+    .docs-content pre code {
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .docs-content p {
+        margin-bottom: 1rem;
+        line-height: 1.7;
+    }
+    .docs-content h2 {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #E5E7EB;
+    }
+    .docs-content h3 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #E5E7EB;
+    }
+    .docs-content ul {
+        margin-bottom: 1rem;
+        list-style-type: disc;
+        padding-left: 1.5rem;
+    }
+    .docs-content ol {
+        margin-bottom: 1rem;
+        list-style-type: decimal;
+        padding-left: 1.5rem;
+    }
+    .docs-content li {
+        margin-bottom: 0.5rem;
+    }
+    .docs-content code:not(pre code) {
+        font-family: 'JetBrains Mono', monospace;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        background-color: rgba(31, 41, 55, 0.5);
+        color: #E5E7EB;
+    }
+    .docs-content pre {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background-color: rgba(31, 41, 55, 0.5);
+        overflow-x: auto;
+    }
+    .docs-content pre code {
+        color: #E5E7EB;
+        font-size: 0.875rem;
+        line-height: 1.7;
+    }
+    .docs-content a {
+        color: #60A5FA;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .docs-content a:hover {
+        color: #93C5FD;
+    }
+    .docs-content blockquote {
+        margin: 1rem 0;
+        padding: 1rem;
+        border-left: 4px solid #60A5FA;
+        background-color: rgba(96, 165, 250, 0.1);
+        border-radius: 0.5rem;
+    }
+    .docs-content blockquote p:last-child {
+        margin-bottom: 0;
+    }
+    .docs-content table {
+        width: 100%;
+        margin-bottom: 1rem;
+        border-collapse: collapse;
+    }
+    .docs-content th {
+        background-color: rgba(31, 41, 55, 0.5);
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-weight: 500;
+        color: #E5E7EB;
+    }
+    .docs-content td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .docs-content tr:last-child td {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-4rem)] flex">
+    <!-- Sidebar -->
+    <aside class="w-64 flex-shrink-0 hidden lg:block">
+        <div class="sticky top-4 glassmorphism rounded-2xl p-6 space-y-6">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                    <i class="fas fa-bolt text-white"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-300">Documentation</h2>
+            </div>
+            
+            <nav class="space-y-1">
+                <a href="{% url 'docs:home' %}" class="flex items-center px-3 py-2 text-sm rounded-lg {% if request.resolver_match.url_name == 'home' %}bg-blue-400/10 text-blue-400{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-700/30{% endif %}">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Overview</span>
+                </a>
+                <a href="{% url 'docs:getting_started' %}" class="flex items-center px-3 py-2 text-sm rounded-lg {% if request.resolver_match.url_name == 'getting_started' %}bg-blue-400/10 text-blue-400{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-700/30{% endif %}">
+                    <i class="fas fa-rocket w-5"></i>
+                    <span>Getting Started</span>
+                </a>
+                <a href="{% url 'docs:api_reference' %}" class="flex items-center px-3 py-2 text-sm rounded-lg {% if request.resolver_match.url_name == 'api_reference' %}bg-blue-400/10 text-blue-400{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-700/30{% endif %}">
+                    <i class="fas fa-code w-5"></i>
+                    <span>API Reference</span>
+                </a>
+                <a href="{% url 'docs:webhooks' %}" class="flex items-center px-3 py-2 text-sm rounded-lg {% if request.resolver_match.url_name == 'webhooks' %}bg-blue-400/10 text-blue-400{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-700/30{% endif %}">
+                    <i class="fas fa-plug w-5"></i>
+                    <span>Webhooks</span>
+                </a>
+                <a href="{% url 'docs:sdks' %}" class="flex items-center px-3 py-2 text-sm rounded-lg {% if request.resolver_match.url_name == 'sdks' %}bg-blue-400/10 text-blue-400{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-700/30{% endif %}">
+                    <i class="fas fa-box w-5"></i>
+                    <span>SDKs</span>
+                </a>
+            </nav>
+
+            <div class="pt-6 border-t border-gray-700/30">
+                <h3 class="text-sm font-medium text-gray-400 mb-3">Resources</h3>
+                <nav class="space-y-1">
+                    <a href="{% url 'docs:examples' %}" class="flex items-center px-3 py-2 text-sm rounded-lg {% if request.resolver_match.url_name == 'examples' %}bg-blue-400/10 text-blue-400{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-700/30{% endif %}">
+                        <i class="fas fa-lightbulb w-5"></i>
+                        <span>Examples</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="pt-6 border-t border-gray-700/30">
+                <a href="{% url 'support' %}" class="flex items-center px-4 py-3 text-sm bg-gradient-to-r from-blue-400 to-purple-600 text-white rounded-lg hover:from-blue-500 hover:to-purple-700 transition-colors">
+                    <i class="fas fa-headset mr-2"></i>
+                    <span>Get Support</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 px-4 lg:px-8 pb-12">
+        <div class="max-w-4xl mx-auto">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-300">{% block doc_header %}Documentation{% endblock %}</h1>
+                {% block doc_description %}{% endblock %}
+            </div>
+
+            <div class="glassmorphism rounded-2xl p-8">
+                <div class="prose prose-invert max-w-none docs-content">
+                    {% block doc_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Highlight current section in sidebar based on scroll position
+    document.addEventListener('DOMContentLoaded', function() {
+        const headings = document.querySelectorAll('.docs-content h2[id]');
+        const navLinks = document.querySelectorAll('nav a');
+        
+        function highlightSection() {
+            let currentSection = '';
+            
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    currentSection = heading.id;
+                }
+            });
+            
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href').split('#')[1];
+                if (href === currentSection) {
+                    link.classList.add('bg-blue-400/10', 'text-blue-400');
+                } else {
+                    link.classList.remove('bg-blue-400/10', 'text-blue-400');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', highlightSection);
+        highlightSection();
+    });
+</script>
+{% endblock %} 

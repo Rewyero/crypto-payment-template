@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage API Keys - CryptoStripe{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-900 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-2xl font-bold text-white">API Keys</h1>
+                <button id="createKeyBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800">
+                    Create New API Key
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                {% for key in api_keys %}
+                <div class="bg-gray-700 rounded-lg p-4 relative overflow-hidden" data-key-id="{{ key.id }}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-medium text-white">{{ key.name }}</h3>
+                            <p class="text-sm text-gray-400">Created {{ key.created_at|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            {% if key.test_mode %}
+                            <span class="px-2 py-1 text-xs font-medium bg-yellow-200 text-yellow-800 rounded-full">Test Mode</span>
+                            {% endif %}
+                            <span class="px-2 py-1 text-xs font-medium {% if key.is_active %}bg-green-200 text-green-800{% else %}bg-red-200 text-red-800{% endif %} rounded-full">
+                                {{ key.is_active|yesno:"Active,Inactive" }}
+                            </span>
+                            {% if key.is_active %}
+                            <button class="deactivate-key text-sm text-red-400 hover:text-red-300">Deactivate</button>
+                            {% else %}
+                            <button class="reactivate-key text-sm text-green-400 hover:text-green-300">Reactivate</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if key.last_used_at %}
+                    <p class="text-sm text-gray-400 mt-2">Last used: {{ key.last_used_at|date:"M d, Y H:i" }}</p>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="text-center py-8">
+                    <p class="text-gray-400">No API keys yet. Create one to get started.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- API Documentation Preview -->
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Quick Start Guide</h2>
+            <div class="bg-gray-900 rounded-lg p-4">
+                <pre class="text-sm text-gray-300 overflow-x-auto"><code>pip install cryptostripe-python
+
+from cryptostripe import CryptoStripe
+
+client = CryptoStripe('your-api-key')
+
+# Create a payment
+payment = client.Payment.create(
+    amount_usd=10.00,
+    crypto_type='BTC'
+)
+
+# Get payment status
+status = client.Payment.get(payment.id)
+
+# Create a subscription
+subscription = client.Subscription.create(
+    plan_name='Pro Plan',
+    amount_usd=49.99,
+    crypto_type='ETH',
+    interval='monthly'
+)</code></pre>
+            </div>
+            <div class="mt-4">
+                <a href="/docs" class="text-indigo-400 hover:text-indigo-300">View Full Documentation →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create API Key Modal -->
+<div id="createKeyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Create New API Key</h2>
+            <form id="createKeyForm" class="space-y-4">
+                <div>
+                    <label for="keyName" class="block text-sm font-medium text-gray-300">Key Name</label>
+                    <input type="text" id="keyName" name="name" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="testMode" name="test_mode" class="h-4 w-4 rounded border-gray-600 text-indigo-600 focus:ring-indigo-500 bg-gray-700">
+                    <label for="testMode" class="ml-2 block text-sm text-gray-300">Test Mode</label>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelCreate" class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                        Create
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- New API Key Modal -->
+<div id="newKeyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Your New API Key</h2>
+            <p class="text-sm text-gray-300 mb-4">Make sure to copy your API key now. You won't be able to see it again!</p>
+            <div class="bg-gray-900 p-4 rounded-lg mb-4">
+                <code id="newApiKey" class="text-sm text-white break-all"></code>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button id="copyKey" class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">
+                    Copy
+                </button>
+                <button id="doneKey" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const createKeyBtn = document.getElementById('createKeyBtn');
+    const createKeyModal = document.getElementById('createKeyModal');
+    const newKeyModal = document.getElementById('newKeyModal');
+    const createKeyForm = document.getElementById('createKeyForm');
+    const cancelCreate = document.getElementById('cancelCreate');
+    const copyKey = document.getElementById('copyKey');
+    const doneKey = document.getElementById('doneKey');
+    
+    // Show create key modal
+    createKeyBtn.addEventListener('click', () => {
+        createKeyModal.classList.remove('hidden');
+    });
+    
+    // Hide create key modal
+    cancelCreate.addEventListener('click', () => {
+        createKeyModal.classList.add('hidden');
+        createKeyForm.reset();
+    });
+    
+    // Create new API key
+    createKeyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(createKeyForm);
+        
+        try {
+            const response = await fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                createKeyModal.classList.add('hidden');
+                document.getElementById('newApiKey').textContent = data.key;
+                newKeyModal.classList.remove('hidden');
+                createKeyForm.reset();
+                
+                // Refresh the page when done
+                doneKey.addEventListener('click', () => {
+                    window.location.reload();
+                });
+            }
+        } catch (error) {
+            console.error('Error creating API key:', error);
+        }
+    });
+    
+    // Copy API key
+    copyKey.addEventListener('click', () => {
+        const keyText = document.getElementById('newApiKey').textContent;
+        navigator.clipboard.writeText(keyText).then(() => {
+            copyKey.textContent = 'Copied!';
+            setTimeout(() => {
+                copyKey.textContent = 'Copy';
+            }, 2000);
+        });
+    });
+    
+    // Handle key activation/deactivation
+    document.addEventListener('click', async (e) => {
+        if (e.target.matches('.deactivate-key, .reactivate-key')) {
+            const action = e.target.classList.contains('deactivate-key') ? 'deactivate' : 'reactivate';
+            const keyId = e.target.closest('[data-key-id]').dataset.keyId;
+            
+            try {
+                const response = await fetch('', {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        'action': action,
+                        'key_id': keyId
+                    }),
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error updating API key:', error);
+            }
+        }
+    });
+    
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %} 

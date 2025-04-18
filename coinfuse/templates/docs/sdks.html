@@ -1,0 +1,183 @@
+{% extends "docs/base_docs.html" %}
+
+{% block title %}SDKs & Libraries - CoinFuse Documentation{% endblock %}
+
+{% block doc_content %}
+<div class="space-y-8">
+    <div class="bg-background-dark/50 rounded-xl p-6 border border-white/10">
+        <h1 class="text-3xl font-bold text-text-light mb-4">SDKs & Libraries</h1>
+        <p class="text-text mb-6">Integrate CoinFuse into your application using our official SDKs and community-maintained libraries.</p>
+    </div>
+
+    <!-- Official SDKs -->
+    <div class="space-y-6">
+        <h2 class="text-2xl font-semibold text-text-light">Official SDKs</h2>
+        
+        <!-- Python SDK -->
+        <div class="bg-background-dark/50 rounded-xl p-6 border border-white/10">
+            <div class="flex items-center mb-4">
+                <i class="fab fa-python text-accent-blue text-2xl mr-3"></i>
+                <h3 class="text-xl font-semibold text-text-light">Python</h3>
+            </div>
+            <div class="space-y-4">
+                <div class="bg-black/50 rounded-lg p-4">
+                    <code class="text-text-light">pip install coinfuse-python</code>
+                </div>
+                <div class="prose prose-invert max-w-none">
+                    <pre><code class="language-python">from coinfuse import CoinFuse
+
+client = CoinFuse('your-api-key')
+
+# Create a payment
+payment = client.payments.create(
+    amount=100,
+    currency='USD',
+    crypto_currency='BTC',
+    callback_url='https://your-site.com/webhook'
+)
+
+# Handle webhooks
+@app.route('/webhook', methods=['POST'])
+def webhook_handler():
+    event = client.webhooks.construct_event(
+        request.data,
+        request.headers['CoinFuse-Signature'],
+        'your-webhook-secret'
+    )
+    # Handle the event
+    return '', 200</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- JavaScript SDK -->
+        <div class="bg-background-dark/50 rounded-xl p-6 border border-white/10">
+            <div class="flex items-center mb-4">
+                <i class="fab fa-js text-accent-blue text-2xl mr-3"></i>
+                <h3 class="text-xl font-semibold text-text-light">JavaScript</h3>
+            </div>
+            <div class="space-y-4">
+                <div class="bg-black/50 rounded-lg p-4">
+                    <code class="text-text-light">npm install @coinfuse/js</code>
+                    <br>
+                    <code class="text-text-light">yarn add @coinfuse/js</code>
+                </div>
+                <div class="prose prose-invert max-w-none">
+                    <pre><code class="language-javascript">import { CoinFuse } from '@coinfuse/js';
+
+const client = new CoinFuse('your-api-key');
+
+// Create a payment
+const payment = await client.payments.create({
+    amount: 100,
+    currency: 'USD',
+    cryptoCurrency: 'BTC',
+    callbackUrl: 'https://your-site.com/webhook'
+});
+
+// Handle webhooks
+app.post('/webhook', (req, res) => {
+    const event = client.webhooks.constructEvent(
+        req.body,
+        req.headers['coinfuse-signature'],
+        'your-webhook-secret'
+    );
+    // Handle the event
+    res.sendStatus(200);
+});</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ruby SDK -->
+        <div class="bg-background-dark/50 rounded-xl p-6 border border-white/10">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-gem text-accent-blue text-2xl mr-3"></i>
+                <h3 class="text-xl font-semibold text-text-light">Ruby</h3>
+            </div>
+            <div class="space-y-4">
+                <div class="bg-black/50 rounded-lg p-4">
+                    <code class="text-text-light">gem install coinfuse</code>
+                </div>
+                <div class="prose prose-invert max-w-none">
+                    <pre><code class="language-ruby">require 'coinfuse'
+
+client = CoinFuse::Client.new('your-api-key')
+
+# Create a payment
+payment = client.payments.create(
+    amount: 100,
+    currency: 'USD',
+    crypto_currency: 'BTC',
+    callback_url: 'https://your-site.com/webhook'
+)
+
+# Handle webhooks
+post '/webhook' do
+    event = client.webhooks.construct_event(
+        request.body.read,
+        request.env['HTTP_COINFUSE_SIGNATURE'],
+        'your-webhook-secret'
+    )
+    # Handle the event
+    status 200
+end</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Libraries -->
+    <div class="space-y-6">
+        <h2 class="text-2xl font-semibold text-text-light">Community Libraries</h2>
+        <div class="bg-background-dark/50 rounded-xl p-6 border border-white/10">
+            <table class="w-full">
+                <thead>
+                    <tr class="text-left border-b border-white/10">
+                        <th class="pb-4 text-text-light">Language/Framework</th>
+                        <th class="pb-4 text-text-light">Repository</th>
+                        <th class="pb-4 text-text-light">Maintainer</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/10">
+                    <tr>
+                        <td class="py-4 text-text">Go</td>
+                        <td class="py-4"><a href="#" class="text-accent-blue hover:text-accent-blue/80">coinfuse-go</a></td>
+                        <td class="py-4 text-text">Community</td>
+                    </tr>
+                    <tr>
+                        <td class="py-4 text-text">Laravel</td>
+                        <td class="py-4"><a href="#" class="text-accent-blue hover:text-accent-blue/80">laravel-coinfuse</a></td>
+                        <td class="py-4 text-text">Community</td>
+                    </tr>
+                    <tr>
+                        <td class="py-4 text-text">Spring</td>
+                        <td class="py-4"><a href="#" class="text-accent-blue hover:text-accent-blue/80">spring-coinfuse</a></td>
+                        <td class="py-4 text-text">Community</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Contributing -->
+    <div class="space-y-6">
+        <h2 class="text-2xl font-semibold text-text-light">Contributing</h2>
+        <div class="bg-background-dark/50 rounded-xl p-6 border border-white/10">
+            <p class="text-text mb-4">Want to contribute to our SDKs and libraries? Here's how you can help:</p>
+            <ol class="list-decimal list-inside space-y-2 text-text">
+                <li>Fork the repository on GitHub</li>
+                <li>Create a new branch for your feature</li>
+                <li>Write tests for your changes</li>
+                <li>Submit a pull request with a clear description</li>
+            </ol>
+            <div class="mt-6">
+                <a href="#" class="inline-flex items-center text-accent-blue hover:text-accent-blue/80">
+                    <i class="fab fa-github mr-2"></i>
+                    View our GitHub repositories
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

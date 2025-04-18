@@ -1,0 +1,715 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<!-- Web3 and Wallet Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+<script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+<script src="https://unpkg.com/@coinbase/wallet-sdk@3.6.0/dist/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
+
+<!-- Initialize wallet connection code -->
+<script>
+let web3;
+let currentWallet = null;
+let provider = null;
+const INFURA_ID = "84842078b09946638c03157f83405213";
+
+// Debug function to log steps
+function debug(message) {
+    console.log(`[Debug] ${message}`);
+}
+
+// Check if MetaMask is available
+function isMetaMaskAvailable() {
+    const { ethereum } = window;
+    return Boolean(ethereum && ethereum.isMetaMask);
+}
+
+// Get CSRF token from cookie
+function getCSRFToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+async function connectMetaMask() {
+    debug('Starting MetaMask connection...');
+    try {
+        // Check if MetaMask is installed
+        if (!isMetaMaskAvailable()) {
+            debug('MetaMask not found');
+            window.open('https://metamask.io/download/', '_blank');
+            showError('MetaMask is not installed. Please install MetaMask and try again.');
+            return;
+        }
+
+        debug('MetaMask found, requesting accounts...');
+        
+        // Request account access using eth_requestAccounts
+        const accounts = await window.ethereum.request({
+            method: 'eth_requestAccounts'
+        }).catch((error) => {
+            debug(`Account request error: ${error.message}`);
+            throw error;
+        });
+
+        if (!accounts || accounts.length === 0) {
+            throw new Error('No accounts found. Please unlock MetaMask and try again.');
+        }
+
+        debug(`Connected account: ${accounts[0]}`);
+
+        // Initialize Web3 with MetaMask provider
+        web3 = new Web3(window.ethereum);
+        const address = accounts[0];
+
+        // Get balance
+        debug('Fetching balance...');
+        const balance = await web3.eth.getBalance(address).catch((error) => {
+            debug(`Balance fetch error: ${error.message}`);
+            throw error;
+        });
+
+        // Get network
+        debug('Fetching network...');
+        const network = await web3.eth.net.getId().catch((error) => {
+            debug(`Network fetch error: ${error.message}`);
+            throw error;
+        });
+        
+        debug(`Network ID: ${network}`);
+
+        // Show wallet info
+        showConnectedWallet({
+            address: address,
+            balance: web3.utils.fromWei(balance, 'ether'),
+            network: getNetworkName(network),
+            type: 'MetaMask'
+        });
+
+        // Set up event listeners
+        window.ethereum.on('accountsChanged', (accounts) => {
+            debug('Account changed');
+            handleAccountsChanged(accounts);
+        });
+        
+        window.ethereum.on('chainChanged', () => {
+            debug('Chain changed');
+            handleChainChanged();
+        });
+        
+        window.ethereum.on('disconnect', () => {
+            debug('MetaMask disconnected');
+            disconnectWallet();
+        });
+        
+        currentWallet = 'metamask';
+        
+        // Save to backend
+        debug('Saving to backend...');
+        await saveWalletToBackend({
+            address: address,
+            wallet_type: 'MetaMask',
+            network: getNetworkName(network)
+        });
+
+        debug('MetaMask connection complete');
+    } catch (error) {
+        debug(`Error in connectMetaMask: ${error.message}`);
+        showError(`Failed to connect to MetaMask: ${error.message}`);
+    }
+}
+
+async function connectWalletConnect() {
+    debug('Starting WalletConnect connection...');
+    try {
+        // Initialize WalletConnect Provider
+        provider = new WalletConnectProvider.default({
+            infuraId: INFURA_ID,
+            qrcodeModalOptions: {
+                mobileLinks: [
+                    "rainbow",
+                    "metamask",
+                    "argent",
+                    "trust",
+                    "imtoken",
+                    "pillar"
+                ]
+            }
+        });
+        
+        debug('Enabling WalletConnect provider...');
+        await provider.enable();
+        
+        debug('Initializing Web3...');
+        web3 = new Web3(provider);
+        
+        debug('Getting accounts...');
+        const accounts = await web3.eth.getAccounts();
+        const address = accounts[0];
+        
+        debug('Fetching balance...');
+        const balance = await web3.eth.getBalance(address);
+        
+        debug('Fetching network...');
+        const network = await web3.eth.net.getId();
+        
+        debug(`Connected to WalletConnect - Address: ${address}, Network: ${network}`);
+        
+        showConnectedWallet({
+            address: address,
+            balance: web3.utils.fromWei(balance, 'ether'),
+            network: getNetworkName(network),
+            type: 'WalletConnect'
+        });
+        
+        // Setup event listeners
+        provider.on('accountsChanged', (accounts) => {
+            debug('WalletConnect accounts changed');
+            handleAccountsChanged(accounts);
+        });
+        
+        provider.on('chainChanged', (chainId) => {
+            debug('WalletConnect chain changed');
+            handleChainChanged();
+        });
+        
+        provider.on('disconnect', (code, reason) => {
+            debug('WalletConnect disconnected:', code, reason);
+            disconnectWallet();
+        });
+        
+        currentWallet = 'walletconnect';
+        
+        await saveWalletToBackend({
+            address: address,
+            wallet_type: 'WalletConnect',
+            network: getNetworkName(network)
+        });
+    } catch (error) {
+        debug(`WalletConnect error: ${error.message}`);
+        showError(`Failed to connect WalletConnect: ${error.message}`);
+        if (provider) {
+            try {
+                await provider.disconnect();
+            } catch (disconnectError) {
+                debug(`Error disconnecting: ${disconnectError.message}`);
+            }
+        }
+    }
+}
+
+async function connectPhantom() {
+    try {
+        if (!window.solana || !window.solana.isPhantom) {
+            window.open('https://phantom.app/', '_blank');
+            showError('Phantom wallet is not installed. Please install Phantom and try again.');
+            return;
+        }
+
+        const resp = await window.solana.connect();
+        const address = resp.publicKey.toString();
+        
+        // Get Solana balance
+        const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+        const balance = await connection.getBalance(resp.publicKey);
+        
+        showConnectedWallet({
+            address: address,
+            balance: (balance / 1000000000).toFixed(4),
+            network: 'Solana',
+            type: 'Phantom'
+        });
+        
+        window.solana.on('accountChanged', () => {
+            disconnectWallet();
+        });
+        
+        currentWallet = 'phantom';
+        
+        await saveWalletToBackend({
+            address: address,
+            wallet_type: 'Phantom',
+            network: 'Solana'
+        });
+    } catch (error) {
+        if (error.code === 4001) {
+            showError('Please approve the connection request in your Phantom wallet.');
+        } else {
+            showError(error.message);
+        }
+    }
+}
+
+async function connectCoinbaseWallet() {
+    try {
+        const APP_NAME = 'CryptoStripe';
+        const APP_LOGO_URL = 'https://example.com/logo.png';
+        const DEFAULT_ETH_JSONRPC_URL = `https://mainnet.infura.io/v3/${INFURA_ID}`;
+        const DEFAULT_CHAIN_ID = 1;
+
+        const coinbaseWallet = new CoinbaseWalletSDK({
+            appName: APP_NAME,
+            appLogoUrl: APP_LOGO_URL,
+            darkMode: true
+        });
+
+        const ethereum = coinbaseWallet.makeWeb3Provider(
+            DEFAULT_ETH_JSONRPC_URL,
+            DEFAULT_CHAIN_ID
+        );
+
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        web3 = new Web3(ethereum);
+        const address = accounts[0];
+        const balance = await web3.eth.getBalance(address);
+        const network = await web3.eth.net.getId();
+
+        showConnectedWallet({
+            address: address,
+            balance: web3.utils.fromWei(balance, 'ether'),
+            network: getNetworkName(network),
+            type: 'Coinbase'
+        });
+
+        ethereum.on('accountsChanged', handleAccountsChanged);
+        ethereum.on('chainChanged', handleChainChanged);
+
+        currentWallet = 'coinbase';
+
+        await saveWalletToBackend({
+            address: address,
+            wallet_type: 'Coinbase',
+            network: getNetworkName(network)
+        });
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+function showConnectedWallet(wallet) {
+    const connectedWallet = document.getElementById('connectedWallet');
+    const walletAddress = document.getElementById('walletAddress');
+    const networkName = document.getElementById('networkName');
+    const walletBalance = document.getElementById('walletBalance');
+    
+    walletAddress.textContent = shortenAddress(wallet.address);
+    networkName.textContent = wallet.network;
+    walletBalance.textContent = `${wallet.balance} ${getNetworkCurrency(wallet.network)}`;
+    
+    connectedWallet.classList.remove('hidden');
+    hideError();
+}
+
+function showError(message) {
+    debug(`Showing error: ${message}`);
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    
+    errorText.textContent = message;
+    errorMessage.classList.remove('hidden');
+}
+
+function hideError() {
+    document.getElementById('errorMessage').classList.add('hidden');
+}
+
+function shortenAddress(address) {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function getNetworkName(chainId) {
+    const networks = {
+        1: 'Ethereum Mainnet',
+        3: 'Ropsten Testnet',
+        4: 'Rinkeby Testnet',
+        5: 'Goerli Testnet',
+        42: 'Kovan Testnet',
+        56: 'Binance Smart Chain',
+        137: 'Polygon Mainnet',
+        43114: 'Avalanche C-Chain'
+    };
+    return networks[chainId] || `Chain ID: ${chainId}`;
+}
+
+function getNetworkCurrency(network) {
+    const currencies = {
+        'Ethereum Mainnet': 'ETH',
+        'Binance Smart Chain': 'BNB',
+        'Polygon Mainnet': 'MATIC',
+        'Solana': 'SOL',
+        'Avalanche C-Chain': 'AVAX'
+    };
+    return currencies[network] || 'ETH';
+}
+
+async function disconnectWallet() {
+    debug('Disconnecting wallet...');
+    try {
+        if (currentWallet === 'walletconnect' && provider) {
+            debug('Disconnecting WalletConnect provider...');
+            await provider.disconnect();
+            provider = null;
+        }
+        document.getElementById('connectedWallet').classList.add('hidden');
+        currentWallet = null;
+        debug('Wallet disconnected successfully');
+    } catch (error) {
+        debug(`Error disconnecting wallet: ${error.message}`);
+        showError(`Failed to disconnect: ${error.message}`);
+    }
+}
+
+function copyAddress() {
+    const address = document.getElementById('walletAddress').textContent;
+    navigator.clipboard.writeText(address).then(() => {
+        // Show success message
+        const button = document.querySelector('button[onclick="copyAddress()"]');
+        const icon = button.querySelector('i');
+        icon.className = 'fas fa-check';
+        setTimeout(() => {
+            icon.className = 'fas fa-copy';
+        }, 2000);
+    });
+}
+
+async function saveWalletToBackend(walletData) {
+    debug('Saving wallet to backend...');
+    try {
+        const csrfToken = getCSRFToken();
+        debug(`CSRF Token: ${csrfToken ? 'Found' : 'Not found'}`);
+        
+        const response = await fetch('/dashboard/save-wallet/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(walletData)
+        });
+        
+        const data = await response.json();
+        debug(`Backend response: ${JSON.stringify(data)}`);
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Unknown error occurred');
+        }
+    } catch (error) {
+        debug(`Backend save error: ${error.message}`);
+        showError(`Failed to save wallet: ${error.message}`);
+        throw error;
+    }
+}
+
+function handleAccountsChanged(accounts) {
+    if (accounts.length === 0) {
+        disconnectWallet();
+    } else {
+        connectMetaMask(); // Reconnect with new account
+    }
+}
+
+function handleChainChanged() {
+    window.location.reload();
+}
+
+// Initialize event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers for wallet connections
+    document.getElementById('metamask-connect').addEventListener('click', connectMetaMask);
+    document.getElementById('walletconnect-connect').addEventListener('click', connectWalletConnect);
+    document.getElementById('coinbase-connect').addEventListener('click', connectCoinbaseWallet);
+    document.getElementById('phantom-connect').addEventListener('click', connectPhantom);
+    
+    // Add click handler for copy address
+    document.getElementById('copy-address').addEventListener('click', copyAddress);
+    
+    // Add click handler for disconnect
+    document.getElementById('disconnect-wallet').addEventListener('click', disconnectWallet);
+});
+</script>
+
+<style>
+    .wallet-card {
+        transition: all 0.3s ease;
+    }
+    .wallet-card:hover {
+        transform: translateY(-4px);
+    }
+    .wallet-logo {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+    }
+    .wallet-logo.metamask {
+        background: linear-gradient(45deg, #F6851B, #E4761B);
+        padding: 8px;
+        border-radius: 12px;
+    }
+    .wallet-logo.walletconnect {
+        background: #3B99FC;
+        padding: 8px;
+        border-radius: 12px;
+    }
+    .wallet-logo.coinbase {
+        background: #0052FF;
+        padding: 8px;
+        border-radius: 12px;
+    }
+    .wallet-logo.phantom {
+        background: #AB9FF2;
+        padding: 8px;
+        border-radius: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-[#1E2A44] to-[#2A3656] py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+                Connect Your Wallet
+            </h1>
+            <p class="mt-2 text-gray-400">Choose your preferred wallet to connect and manage your crypto payments</p>
+        </div>
+
+        <!-- Connected Wallets Section -->
+        <div class="bg-[#2E3A59]/30 backdrop-blur-xl rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-2xl font-semibold text-white mb-6">Connected Wallets</h2>
+            <div id="connectedWalletsList" class="space-y-4">
+                {% for wallet in wallets %}
+                <div class="bg-[#1E293B] rounded-lg p-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                            {% if wallet.wallet_source == 'MetaMask' %}
+                            <i class="fas fa-fox text-orange-400"></i>
+                            {% elif wallet.wallet_source == 'WalletConnect' %}
+                            <i class="fas fa-wallet text-blue-400"></i>
+                            {% elif wallet.wallet_source == 'Phantom' %}
+                            <i class="fas fa-ghost text-purple-400"></i>
+                            {% else %}
+                            <i class="fas fa-wallet text-gray-400"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-400">{{ wallet.wallet_source }}</div>
+                            <div class="text-white font-mono">{{ wallet.wallet_address|truncatechars:16 }}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-400">{{ wallet.network }}</span>
+                        <button onclick="disconnectWallet('{{ wallet.id }}')" class="text-red-400 hover:text-red-300">
+                            <i class="fas fa-unlink"></i>
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-gray-400 py-8">
+                    <i class="fas fa-wallet text-4xl mb-2"></i>
+                    <p>No wallets connected yet</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Wallet Options -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- MetaMask -->
+            <div class="bg-[#2E3A59]/30 backdrop-blur-xl rounded-2xl p-6 hover:bg-[#2E3A59]/40 transition-all cursor-pointer"
+                 onclick="connectMetaMask()">
+                <div class="flex items-center justify-between mb-4">
+                    <img src="{% static 'images/metamask.svg' %}" alt="MetaMask" class="h-12 w-12">
+                    <span class="text-sm text-gray-400">Popular</span>
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-2">MetaMask</h3>
+                <p class="text-gray-400 text-sm">Connect to your MetaMask wallet</p>
+            </div>
+
+            <!-- WalletConnect -->
+            <div class="bg-[#2E3A59]/30 backdrop-blur-xl rounded-2xl p-6 hover:bg-[#2E3A59]/40 transition-all cursor-pointer"
+                 onclick="connectWalletConnect()">
+                <div class="flex items-center justify-between mb-4">
+                    <img src="{% static 'images/walletconnect.svg' %}" alt="WalletConnect" class="h-12 w-12">
+                    <span class="text-sm text-gray-400">Universal</span>
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-2">WalletConnect</h3>
+                <p class="text-gray-400 text-sm">Connect using WalletConnect</p>
+            </div>
+
+            <!-- Phantom -->
+            <div class="bg-[#2E3A59]/30 backdrop-blur-xl rounded-2xl p-6 hover:bg-[#2E3A59]/40 transition-all cursor-pointer"
+                 onclick="connectPhantom()">
+                <div class="flex items-center justify-between mb-4">
+                    <img src="{% static 'images/phantom.svg' %}" alt="Phantom" class="h-12 w-12">
+                    <span class="text-sm text-gray-400">Solana</span>
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-2">Phantom</h3>
+                <p class="text-gray-400 text-sm">Connect to your Phantom wallet</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification -->
+<div id="notification" class="fixed bottom-4 right-4 hidden">
+    <div class="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+        <span id="notificationText"></span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ... existing wallet connection code ...
+
+async function saveWalletToBackend(data) {
+    try {
+        const response = await fetch('/payments/save-wallet/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                address: data.address,
+                wallet_type: data.wallet_type,
+                network: data.network,
+                crypto_type: getCryptoType(data.network), // Helper function to determine crypto type
+                memo: data.memo
+            })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            showNotification('Wallet connected successfully');
+            // Refresh the wallets list
+            loadConnectedWallets();
+        } else {
+            throw new Error(result.error);
+        }
+    } catch (error) {
+        showError(`Failed to save wallet: ${error.message}`);
+    }
+}
+
+function getCryptoType(network) {
+    const networkMap = {
+        'Ethereum Network': 'ETH',
+        'Bitcoin Network': 'BTC',
+        'Solana': 'SOL',
+        'BNB Chain': 'BNB',
+        'XRP Ledger': 'XRP',
+        'Cardano Network': 'ADA',
+        'Dogecoin Network': 'DOGE',
+        'Avalanche Network': 'AVAX'
+    };
+    return networkMap[network] || 'ETH';
+}
+
+async function loadConnectedWallets() {
+    try {
+        const response = await fetch('/payments/api/connected-wallets/');
+        const data = await response.json();
+        
+        if (data.success) {
+            const walletsList = document.getElementById('connectedWalletsList');
+            if (data.wallets.length === 0) {
+                walletsList.innerHTML = `
+                    <div class="text-center text-gray-400 py-8">
+                        <i class="fas fa-wallet text-4xl mb-2"></i>
+                        <p>No wallets connected yet</p>
+                    </div>
+                `;
+            } else {
+                walletsList.innerHTML = data.wallets.map(wallet => `
+                    <div class="bg-[#1E293B] rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                ${getWalletIcon(wallet.wallet_source)}
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-400">${wallet.wallet_source}</div>
+                                <div class="text-white font-mono">${truncateAddress(wallet.wallet_address)}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-sm text-gray-400">${wallet.network}</span>
+                            <button onclick="disconnectWallet('${wallet.id}')" class="text-red-400 hover:text-red-300">
+                                <i class="fas fa-unlink"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading wallets:', error);
+    }
+}
+
+function getWalletIcon(walletSource) {
+    const icons = {
+        'MetaMask': '<i class="fas fa-fox text-orange-400"></i>',
+        'WalletConnect': '<i class="fas fa-wallet text-blue-400"></i>',
+        'Phantom': '<i class="fas fa-ghost text-purple-400"></i>'
+    };
+    return icons[walletSource] || '<i class="fas fa-wallet text-gray-400"></i>';
+}
+
+function truncateAddress(address) {
+    return `${address.slice(0, 8)}...${address.slice(-6)}`;
+}
+
+async function disconnectWallet(walletId) {
+    if (!confirm('Are you sure you want to disconnect this wallet?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/payments/manage-wallets/${walletId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            showNotification('Wallet disconnected successfully');
+            loadConnectedWallets();
+        } else {
+            throw new Error(data.error);
+        }
+    } catch (error) {
+        showError(`Failed to disconnect wallet: ${error.message}`);
+    }
+}
+
+function showNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Load connected wallets when the page loads
+document.addEventListener('DOMContentLoaded', loadConnectedWallets);
+</script>
+{% endblock %} 

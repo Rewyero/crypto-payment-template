@@ -1,0 +1,222 @@
+{% extends "docs/base_docs.html" %}
+
+{% block title %}Examples - CoinFuse Documentation{% endblock %}
+
+{% block doc_content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-background-dark/50 rounded-xl p-6 border border-white/10 mb-8">
+        <h1 class="text-3xl font-bold text-text-light mb-4">Integration Examples</h1>
+        <p class="text-text">Learn how to integrate CoinFuse with practical code examples.</p>
+    </div>
+
+    <!-- Simple Checkout -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-semibold text-text-light mb-4">Simple Checkout</h2>
+        <p class="mb-4 text-text">Implement a basic crypto payment checkout flow in your application.</p>
+        
+        <div class="bg-background-dark/50 rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-text-light mb-4">HTML/Template</h3>
+            <div class="font-mono text-sm text-text-light">
+                <pre><code>{% verbatim %}
+<form action="{% url 'create_payment' %}" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="amount" value="10.00">
+    <input type="hidden" name="currency" value="USD">
+    <button type="submit" class="bg-primary text-white px-4 py-2 rounded">
+        Pay with Crypto
+    </button>
+</form>{% endverbatim %}</code></pre>
+            </div>
+        </div>
+
+        <div class="bg-background-dark/50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-text-light mb-4">Python/Django View</h3>
+            <div class="font-mono text-sm text-text-light">
+                <pre><code>from django.shortcuts import redirect
+from coinfuse import Payment
+
+def create_payment(request):
+    payment = Payment.create(
+        amount=1000,  # Amount in cents
+        currency='USD',
+        crypto_currency='BTC',
+        success_url='https://your-domain.com/success',
+        cancel_url='https://your-domain.com/cancel'
+    )
+    return redirect(payment.checkout_url)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Subscription Management -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-semibold text-text-light mb-4">Subscription Management</h2>
+        <p class="mb-4 text-text">Handle recurring crypto payments with subscription management.</p>
+
+        <div class="bg-background-dark/50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-text-light mb-4">Template Example (subscriptions.html)</h3>
+            <div class="font-mono text-sm text-text-light">
+                <pre><code>{% verbatim %}
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl mb-4">Your Subscriptions</h1>
+    
+    {% for sub in subscriptions %}
+    <div class="border rounded p-4 mb-4">
+        <div class="flex justify-between items-center">
+            <div>
+                <h3>{{ sub.plan.name }}</h3>
+                <p>{{ sub.crypto_currency }} - {{ sub.amount }}/month</p>
+                <p>Status: {{ sub.status }}</p>
+            </div>
+            <button onclick="cancelSubscription('{{ sub.id }}')"
+                    class="bg-red-500 text-white px-4 py-2 rounded">
+                Cancel
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}{% endverbatim %}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Webhook Handling -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-semibold text-text-light mb-4">Webhook Handling</h2>
+        <p class="mb-4 text-text">Process crypto payment webhooks to update your application state.</p>
+
+        <div class="bg-background-dark/50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-text-light mb-4">Python/Django Webhook Handler</h3>
+            <div class="font-mono text-sm text-text-light">
+                <pre><code>from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from coinfuse import Webhook
+
+@csrf_exempt
+def webhook_handler(request):
+    payload = request.body
+    sig_header = request.META['HTTP_COINFUSE_SIGNATURE']
+    
+    try:
+        event = Webhook.construct_event(
+            payload, sig_header, settings.WEBHOOK_SECRET
+        )
+        
+        if event.type == 'payment.succeeded':
+            payment = event.data.object
+            # Update order status
+            order = Order.objects.get(payment_id=payment.id)
+            order.status = 'paid'
+            order.save()
+            
+        return HttpResponse(status=200)
+    except ValueError:
+        return HttpResponse(status=400)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Custom Integration -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-semibold text-text-light mb-4">Custom Integration</h2>
+        <p class="mb-4 text-text">Build a custom checkout experience using our JavaScript SDK.</p>
+
+        <div class="bg-background-dark/50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-text-light mb-4">React/Next.js Component</h3>
+            <div class="font-mono text-sm text-text-light">
+                <pre><code>import { useEffect } from 'react';
+import { CoinFuse } from '@coinfuse/js';
+
+export default function CustomCheckout() {
+    useEffect(() => {
+        const coinfuse = new CoinFuse('YOUR_PUBLISHABLE_KEY');
+        
+        const handlePayment = async () => {
+            const { paymentId } = await coinfuse.createPayment({
+                amount: 1000,
+                currency: 'USD',
+                cryptoCurrency: 'ETH',
+                metadata: {
+                    orderId: '12345'
+                }
+            });
+            
+            const result = await coinfuse.confirmPayment(paymentId);
+            if (result.status === 'succeeded') {
+                // Handle success
+            }
+        };
+        
+        document.querySelector('#pay-button')
+            .addEventListener('click', handlePayment);
+    }, []);
+    
+    return (
+        <div className="p-6">
+            <button id="pay-button" className="btn-primary">
+                Pay with Ethereum
+            </button>
+        </div>
+    );
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mobile Integration -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-semibold text-text-light mb-4">Mobile Integration</h2>
+        <p class="mb-4 text-text">Integrate crypto payments in your mobile app using our React Native SDK.</p>
+
+        <div class="bg-background-dark/50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-text-light mb-4">React Native Component</h3>
+            <div class="font-mono text-sm text-text-light">
+                <pre><code>{% verbatim %}import React from 'react';
+import { View, Button } from 'react-native';
+import { CoinFuseProvider, usePayment } from '@coinfuse/react-native';
+
+function PaymentScreen() {
+    const { initiatePayment } = usePayment();
+    
+    const handlePayment = async () => {
+        try {
+            const result = await initiatePayment({
+                amount: 1000,
+                currency: 'USD',
+                cryptoCurrency: 'BTC'
+            });
+            
+            if (result.status === 'succeeded') {
+                // Navigate to success screen
+            }
+        } catch (error) {
+            console.error('Payment failed:', error);
+        }
+    };
+    
+    return (
+        <View>
+            <Button 
+                title="Pay with Bitcoin"
+                onPress={handlePayment}
+            />
+        </View>
+    );
+}
+
+export default function App() {
+    return (
+        <CoinFuseProvider apiKey="YOUR_PUBLISHABLE_KEY">
+            <PaymentScreen />
+        </CoinFuseProvider>
+    );
+}{% endverbatim %}</code></pre>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %} 

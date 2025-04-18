@@ -1,0 +1,59 @@
+{% extends "docs/base_docs.html" %}
+
+{% block title %}CoinFuse Documentation{% endblock %}
+
+{% block doc_content %}
+<div class="space-y-8">
+    <div class="bg-background-dark/50 rounded-xl p-6 border border-white/10">
+        <h1 class="text-3xl font-bold text-text-light mb-4">CoinFuse Documentation</h1>
+        <p class="text-text mb-6">Welcome to the CoinFuse documentation. Here you'll find everything you need to integrate cryptocurrency payments into your application.</p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Getting Started -->
+        <a href="{% url 'docs:getting_started' %}" class="group p-6 bg-background-dark/50 rounded-xl border border-white/10 hover:border-accent-blue transition-all duration-200">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-rocket text-accent-blue mr-3"></i>
+                <h2 class="text-2xl font-semibold text-text-light group-hover:text-accent-blue transition-colors">Getting Started</h2>
+            </div>
+            <p class="text-text">Learn how to integrate CoinFuse into your application with our quick start guide.</p>
+        </a>
+
+        <!-- API Reference -->
+        <a href="{% url 'docs:api_reference' %}" class="group p-6 bg-background-dark/50 rounded-xl border border-white/10 hover:border-accent-blue transition-all duration-200">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-code text-accent-blue mr-3"></i>
+                <h2 class="text-2xl font-semibold text-text-light group-hover:text-accent-blue transition-colors">API Reference</h2>
+            </div>
+            <p class="text-text">Complete reference documentation for the CoinFuse API endpoints.</p>
+        </a>
+
+        <!-- Webhooks -->
+        <a href="{% url 'docs:webhooks' %}" class="group p-6 bg-background-dark/50 rounded-xl border border-white/10 hover:border-accent-blue transition-all duration-200">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-plug text-accent-blue mr-3"></i>
+                <h2 class="text-2xl font-semibold text-text-light group-hover:text-accent-blue transition-colors">Webhooks</h2>
+            </div>
+            <p class="text-text">Learn how to handle payment events using webhooks.</p>
+        </a>
+
+        <!-- SDKs -->
+        <a href="{% url 'docs:sdks' %}" class="group p-6 bg-background-dark/50 rounded-xl border border-white/10 hover:border-accent-blue transition-all duration-200">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-cube text-accent-blue mr-3"></i>
+                <h2 class="text-2xl font-semibold text-text-light group-hover:text-accent-blue transition-colors">SDKs & Libraries</h2>
+            </div>
+            <p class="text-text">Use our official SDKs and community libraries to integrate CoinFuse.</p>
+        </a>
+
+        <!-- Examples -->
+        <a href="{% url 'docs:examples' %}" class="group p-6 bg-background-dark/50 rounded-xl border border-white/10 hover:border-accent-blue transition-all duration-200">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-lightbulb text-accent-blue mr-3"></i>
+                <h2 class="text-2xl font-semibold text-text-light group-hover:text-accent-blue transition-colors">Examples</h2>
+            </div>
+            <p class="text-text">Browse through code examples for common integration scenarios.</p>
+        </a>
+    </div>
+</div>
+{% endblock %} 

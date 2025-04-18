@@ -1,0 +1,116 @@
+{% extends "docs/base_docs.html" %}
+
+{% block title %}Webhooks - CoinFuse Documentation{% endblock %}
+
+{% block doc_content %}
+<div class="space-y-8">
+    <div class="bg-background-dark/50 rounded-xl p-6 border border-white/10">
+        <h1 class="text-3xl font-bold text-text-light mb-4">Webhooks</h1>
+        <p class="text-text mb-6">Learn how to handle webhook events from CoinFuse to keep your application in sync with payment status changes.</p>
+    </div>
+
+    <div class="space-y-6">
+        <section>
+            <h2 class="text-2xl font-semibold text-text-light mb-4">Overview</h2>
+            <p class="text-text mb-4">Webhooks allow your application to receive real-time updates about payment status changes, subscription renewals, and other important events.</p>
+            <div class="bg-background-dark/50 rounded-lg p-4 border border-white/10">
+                <p class="text-sm text-text">
+                    <i class="fas fa-info-circle text-accent-blue mr-2"></i>
+                    Your webhook endpoint should be publicly accessible and use HTTPS in production.
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-semibold text-text-light mb-4">Setting Up Webhooks</h2>
+            <div class="space-y-4">
+                <p class="text-text">1. Configure your webhook endpoint in your CoinFuse dashboard</p>
+                <p class="text-text">2. Add the webhook handler to your Django application:</p>
+                <pre class="bg-background-dark/50 p-4 rounded-lg"><code class="language-python">from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from coinfuse.webhooks import Webhook
+
+@csrf_exempt
+def webhook_handler(request):
+    payload = request.body
+    signature = request.headers.get('CoinFuse-Signature')
+    
+    try:
+        event = Webhook.construct_event(
+            payload, signature, settings.COINFUSE_WEBHOOK_SECRET
+        )
+        
+        # Handle the event
+        if event.type == 'payment.succeeded':
+            handle_payment_succeeded(event.data)
+        elif event.type == 'payment.failed':
+            handle_payment_failed(event.data)
+        elif event.type == 'subscription.renewed':
+            handle_subscription_renewed(event.data)
+        
+        return HttpResponse(status=200)
+    except ValueError as e:
+        return HttpResponse(str(e), status=400)</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-semibold text-text-light mb-4">Event Types</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-background-dark/50 p-4 rounded-lg border border-white/10">
+                    <h3 class="text-lg font-semibold text-text-light mb-2">Payment Events</h3>
+                    <ul class="list-disc list-inside space-y-2 text-text">
+                        <li>payment.succeeded</li>
+                        <li>payment.failed</li>
+                        <li>payment.refunded</li>
+                        <li>payment.pending</li>
+                    </ul>
+                </div>
+                <div class="bg-background-dark/50 p-4 rounded-lg border border-white/10">
+                    <h3 class="text-lg font-semibold text-text-light mb-2">Subscription Events</h3>
+                    <ul class="list-disc list-inside space-y-2 text-text">
+                        <li>subscription.created</li>
+                        <li>subscription.renewed</li>
+                        <li>subscription.cancelled</li>
+                        <li>subscription.failed</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-semibold text-text-light mb-4">Best Practices</h2>
+            <div class="space-y-4">
+                <div class="bg-background-dark/50 p-4 rounded-lg border border-white/10">
+                    <h3 class="text-lg font-semibold text-text-light mb-2">1. Verify Signatures</h3>
+                    <p class="text-text">Always verify webhook signatures to ensure the request came from CoinFuse.</p>
+                </div>
+                <div class="bg-background-dark/50 p-4 rounded-lg border border-white/10">
+                    <h3 class="text-lg font-semibold text-text-light mb-2">2. Return 2xx Quickly</h3>
+                    <p class="text-text">Acknowledge receipt quickly and handle time-consuming operations asynchronously.</p>
+                </div>
+                <div class="bg-background-dark/50 p-4 rounded-lg border border-white/10">
+                    <h3 class="text-lg font-semibold text-text-light mb-2">3. Handle Retries</h3>
+                    <p class="text-text">Design your webhook handler to be idempotent as events may be sent multiple times.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-semibold text-text-light mb-4">Testing Webhooks</h2>
+            <div class="space-y-4">
+                <p class="text-text">Use the CoinFuse CLI to test your webhook endpoint locally:</p>
+                <pre class="bg-background-dark/50 p-4 rounded-lg"><code class="language-bash">coinfuse webhook-test \
+    --url http://localhost:8000/webhooks/coinfuse \
+    --event payment.succeeded</code></pre>
+                <div class="bg-background-dark/50 p-4 rounded-lg border border-white/10">
+                    <p class="text-sm text-text">
+                        <i class="fas fa-lightbulb text-yellow-400 mr-2"></i>
+                        For local development, you can use tools like ngrok to create a public URL for testing webhooks.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %} 

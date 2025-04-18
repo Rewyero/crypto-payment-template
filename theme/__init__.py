@@ -1,0 +1,3 @@
+"""
+Theme app initialization.
+""" 
