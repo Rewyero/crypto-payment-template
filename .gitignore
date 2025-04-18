@@ -26,13 +26,50 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 media/
+static/
 
-# Cursor
+# Virtual Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE - Cursor
 .cursor/
-cursorrules.mdc
+.cursor
+*.cursor
+
+# IDE - VS Code
+.vscode/
+*.code-workspace
+
+# gitignore
+.gitignore
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
 
 # Environment variables
-.env
 .env.*
 !.env.example
 
@@ -44,16 +81,8 @@ cursorrules.mdc
 *.pgsql
 *.dump
 
-# Virtual Environment
-venv/
-ENV/
-env/
-.env/
-.venv/
-
 # IDE
 .idea/
-.vscode/
 *.swp
 *.swo
 *~
@@ -62,7 +91,6 @@ env/
 *.pyc
 *.pyo
 *.pyd
-.Python
 *.so
 
 # Distribution / packaging
@@ -101,19 +129,11 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
 # Logs
 logs/
 *.log
 
 # OS generated files
-.DS_Store
-.DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
