@@ -175,4 +175,4 @@ For support, email support@coinfuse.com or open an issue in the GitHub repositor
 
 ---
 
-Made with ❤️ by [Your Name] 
+Made with ❤️ by ME :)
