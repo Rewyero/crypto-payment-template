@@ -1,7 +1,5 @@
 # CoinFuse - Modern Crypto Payment Processing Platform
 
-![CoinFuse Banner](docs/banner.png)
-
 CoinFuse is a modern, Stripe-like cryptocurrency payment processing platform built with Django and Tailwind CSS. It provides businesses with a seamless way to accept and manage cryptocurrency payments with a beautiful, user-friendly interface.
 
 ## ✨ Features
